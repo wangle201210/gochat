@@ -3,15 +3,27 @@ package ui
 import (
 	"context"
 	"fmt"
+	"image/color"
 	"strings"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/driver/desktop"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	"github.com/wangle201210/gochat/internal/models"
 	"github.com/wangle201210/gochat/internal/service/ai"
+)
+
+var (
+	// 小清新颜色方案
+	userMessageBg   = color.NRGBA{R: 240, G: 248, B: 255, A: 255} // 淡蓝白 - 柔和不明显
+	assistantBg     = color.NRGBA{R: 255, G: 253, B: 245, A: 255} // 温暖米白
+	backgroundColor = color.NRGBA{R: 250, G: 252, B: 252, A: 255} // 清新白
+	inputAreaBg     = color.NRGBA{R: 255, G: 255, B: 255, A: 255} // 纯白
+	separatorColor  = color.NRGBA{R: 230, G: 240, B: 235, A: 255} // 淡绿分隔线
 )
 
 // ChatWindow 聊天窗口
@@ -86,37 +98,50 @@ func (cw *ChatWindow) setupUI() {
 	// 消息容器 - 使用 VBox 允许动态高度
 	cw.messageContainer = container.NewVBox()
 
+	// 创建带背景的消息区域
+	messageAreaBg := canvas.NewRectangle(backgroundColor)
+	messagesWithBg := container.NewStack(messageAreaBg, cw.messageContainer)
+
 	// 滚动容器
-	cw.scrollContainer = container.NewScroll(cw.messageContainer)
+	cw.scrollContainer = container.NewScroll(messagesWithBg)
 
 	// 创建自定义输入框（Enter 发送）
 	cw.inputEntry = newCustomEntry(cw.handleSend)
 	cw.inputEntry.SetPlaceHolder("输入消息... (Enter 发送, Shift+Enter 换行)")
 	cw.inputEntry.SetMinRowsVisible(3)
 
-	// 发送按钮
-	cw.sendButton = widget.NewButton("发送", cw.handleSend)
+	// 发送按钮 - 使用重要样式
+	cw.sendButton = widget.NewButton("发送消息", cw.handleSend)
+	cw.sendButton.Importance = widget.HighImportance
 
 	// 清空按钮
-	cw.clearButton = widget.NewButton("清空历史", cw.handleClear)
+	cw.clearButton = widget.NewButton("清空对话", cw.handleClear)
 
-	// 底部按钮栏
-	buttonBar := container.NewBorder(nil, nil, cw.clearButton, cw.sendButton)
+	// 底部按钮栏 - 添加间距
+	buttonBar := container.NewHBox(
+		cw.clearButton,
+		layout.NewSpacer(),
+		cw.sendButton,
+	)
 
-	// 输入区域
-	inputArea := container.NewBorder(nil, buttonBar, nil, nil, cw.inputEntry)
+	// 输入区域容器 - 添加内边距
+	inputCard := container.NewVBox(
+		widget.NewSeparator(),
+		container.NewPadded(cw.inputEntry),
+		container.NewPadded(buttonBar),
+	)
 
 	// 主布局
 	mainContent := container.NewBorder(
 		nil,
-		inputArea,
+		inputCard,
 		nil,
 		nil,
 		cw.scrollContainer,
 	)
 
 	cw.window.SetContent(mainContent)
-	cw.window.Resize(fyne.NewSize(800, 600))
+	cw.window.Resize(fyne.NewSize(900, 700))
 }
 
 // handleSend 处理发送消息
@@ -193,45 +218,82 @@ func (cw *ChatWindow) handleClear() {
 func (cw *ChatWindow) addMessage(msg *models.Message) *widget.RichText {
 	cw.messages = append(cw.messages, msg)
 
-	// 创建角色标签
-	roleLabel := widget.NewLabel("")
-	roleLabel.TextStyle = fyne.TextStyle{Bold: true}
-
-	var contentWidget fyne.CanvasObject
 	var richText *widget.RichText
+	var messageCard *fyne.Container
 
 	switch msg.Role {
 	case models.RoleUser:
-		roleLabel.SetText("👤 用户:")
+		// 用户消息 - 薄荷绿卡片（小清新风格）
+		roleLabel := widget.NewLabel("※ 我")
+		roleLabel.TextStyle = fyne.TextStyle{Bold: true}
+
 		// 用户消息使用 Label 保留换行符
 		contentLabel := widget.NewLabel(msg.Content)
 		contentLabel.Wrapping = fyne.TextWrapWord
-		contentWidget = contentLabel
+
+		// 创建内容容器
+		contentBox := container.NewVBox(
+			roleLabel,
+			contentLabel,
+		)
+
+		// 创建带柔和边距的背景
+		bg := canvas.NewRectangle(userMessageBg)
+
+		// 使用适度的内边距
+		cardContent := container.NewPadded(contentBox)
+		messageCard = container.NewStack(bg, cardContent)
 
 	case models.RoleAssistant:
-		roleLabel.SetText("🤖 助手:")
+		// AI 消息 - 温暖米白卡片（小清新风格）
+		roleLabel := widget.NewLabel("✨ 助手")
+		roleLabel.TextStyle = fyne.TextStyle{Bold: true}
+
 		// AI 消息使用 RichText 渲染 Markdown
 		richText = widget.NewRichTextFromMarkdown(msg.Content)
 		richText.Wrapping = fyne.TextWrapWord
-		contentWidget = richText
+
+		// 创建内容容器
+		contentBox := container.NewVBox(
+			roleLabel,
+			richText,
+		)
+
+		// 创建带柔和边距的背景
+		bg := canvas.NewRectangle(assistantBg)
+
+		// 使用适度的内边距
+		cardContent := container.NewPadded(contentBox)
+		messageCard = container.NewStack(bg, cardContent)
 
 	case models.RoleSystem:
-		roleLabel.SetText("⚙️ 系统:")
-		// 系统消息使用 Label
+		// 系统消息 - 简单样式
+		roleLabel := widget.NewLabel("⚙️ 系统")
+		roleLabel.TextStyle = fyne.TextStyle{Bold: true, Italic: true}
+
 		contentLabel := widget.NewLabel(msg.Content)
 		contentLabel.Wrapping = fyne.TextWrapWord
-		contentWidget = contentLabel
+
+		contentBox := container.NewVBox(
+			roleLabel,
+			contentLabel,
+		)
+		messageCard = container.NewPadded(contentBox)
 	}
 
-	// 创建消息卡片
-	messageCard := container.NewVBox(
-		roleLabel,
-		contentWidget,
-		widget.NewSeparator(),
+	// 添加更大的间距，营造清爽感
+	spacer := canvas.NewRectangle(color.Transparent)
+	spacer.SetMinSize(fyne.NewSize(1, 12)) // 12 像素间距
+
+	spacedCard := container.NewVBox(
+		messageCard,
+		spacer,
 	)
 
-	// 添加到消息容器
-	cw.messageContainer.Add(messageCard)
+	// 添加到消息容器，左右添加边距
+	cw.messageContainer.Add(
+		container.NewPadded(spacedCard),
+	)
 	cw.scrollToBottom()
 
 	return richText
