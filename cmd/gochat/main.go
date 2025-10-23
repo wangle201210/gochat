@@ -44,8 +44,8 @@ func main() {
 	// 创建 Fyne 应用
 	fyneApp := app.New()
 
-	// 创建聊天窗口
-	chatWindow := ui.NewChatWindow(fyneApp, aiService)
+	// 创建聊天窗口，传入 UI 配置
+	chatWindow := ui.NewChatWindow(fyneApp, aiService, &cfg.UI)
 
 	// 显示窗口并运行应用
 	chatWindow.Show()

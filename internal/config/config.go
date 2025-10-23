@@ -23,9 +23,8 @@ type AIConfig struct {
 
 // UIConfig UI 相关配置
 type UIConfig struct {
-	WindowWidth  int    `json:"window_width"`
-	WindowHeight int    `json:"window_height"`
-	Theme        string `json:"theme"` // "light" 或 "dark"
+	WindowWidth  int `json:"window_width"`
+	WindowHeight int `json:"window_height"`
 }
 
 // DefaultConfig 返回默认配置
@@ -35,11 +34,11 @@ func DefaultConfig() *Config {
 			Provider: "openai",
 			Model:    "gpt-3.5-turbo",
 			BaseURL:  "https://api.openai.com/v1",
+			APIKey:   "APIKey",
 		},
 		UI: UIConfig{
 			WindowWidth:  800,
 			WindowHeight: 600,
-			Theme:        "light",
 		},
 	}
 }

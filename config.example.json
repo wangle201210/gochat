@@ -7,7 +7,6 @@
   },
   "ui": {
     "window_width": 800,
-    "window_height": 600,
-    "theme": "light"
+    "window_height": 600
   }
 }
