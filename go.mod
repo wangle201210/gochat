@@ -11,6 +11,7 @@ require (
 	github.com/cloudwego/eino-ext/libs/acl/openai v0.1.0 // indirect
 	github.com/evanphx/json-patch v0.5.2 // indirect
 	github.com/kr/pretty v0.2.0 // indirect
+	github.com/mattn/go-sqlite3 v1.14.32 // indirect
 	github.com/meguminnnnnnnnn/go-openai v0.1.0 // indirect
 )
 

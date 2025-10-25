@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // Role 表示消息角色
 type Role string
@@ -31,5 +34,5 @@ func NewMessage(role Role, content string) *Message {
 
 // generateID 生成消息 ID
 func generateID() string {
-	return time.Now().Format("20060102150405.000000")
+	return fmt.Sprintf("%d", time.Now().UnixMilli())
 }

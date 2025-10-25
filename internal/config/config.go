@@ -9,12 +9,21 @@ import (
 
 // Config 应用配置
 type Config struct {
-	AI AIConfig `json:"ai"`
-	UI UIConfig `json:"ui"`
+	AI        AIConfig        `json:"ai"`
+	Assistant AssistantConfig `json:"assistant"`
+	UI        UIConfig        `json:"ui"`
 }
 
 // AIConfig AI 相关配置
 type AIConfig struct {
+	Provider string `json:"provider"` // 例如: "ark", "openai", "anthropic"
+	Model    string `json:"model"`    // 模型名称
+	APIKey   string `json:"api_key"`  // API Key
+	BaseURL  string `json:"base_url"` // API Base URL
+}
+
+// AssistantConfig 助手模型配置（用于生成会话标题等辅助任务）
+type AssistantConfig struct {
 	Provider string `json:"provider"` // 例如: "ark", "openai", "anthropic"
 	Model    string `json:"model"`    // 模型名称
 	APIKey   string `json:"api_key"`  // API Key
@@ -31,6 +40,12 @@ type UIConfig struct {
 func DefaultConfig() *Config {
 	return &Config{
 		AI: AIConfig{
+			Provider: "openai",
+			Model:    "gpt-3.5-turbo",
+			BaseURL:  "https://api.openai.com/v1",
+			APIKey:   "APIKey",
+		},
+		Assistant: AssistantConfig{
 			Provider: "openai",
 			Model:    "gpt-3.5-turbo",
 			BaseURL:  "https://api.openai.com/v1",

@@ -5,6 +5,12 @@
     "api_key": "your-api-key-here",
     "base_url": "https://api.openai.com/v1"
   },
+  "assistant": {
+    "provider": "openai",
+    "model": "gpt-3.5-turbo",
+    "api_key": "your-api-key-here",
+    "base_url": "https://api.openai.com/v1"
+  },
   "ui": {
     "window_width": 800,
     "window_height": 600

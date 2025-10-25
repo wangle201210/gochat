@@ -24,14 +24,18 @@ func NewService(cfg *config.AIConfig) (*Service, error) {
 	var err error
 
 	switch cfg.Provider {
-	case "openai":
+	// case "openai":
+	// 	chatModel, err = openai.NewChatModel(context.Background(), &openai.ChatModelConfig{
+	// 		BaseURL: cfg.BaseURL,
+	// 		Model:   cfg.Model,
+	// 		APIKey:  cfg.APIKey,
+	// 	})
+	default:
 		chatModel, err = openai.NewChatModel(context.Background(), &openai.ChatModelConfig{
 			BaseURL: cfg.BaseURL,
 			Model:   cfg.Model,
 			APIKey:  cfg.APIKey,
 		})
-	default:
-		return nil, fmt.Errorf("不支持的 AI provider: %s", cfg.Provider)
 	}
 
 	if err != nil {
@@ -121,6 +125,11 @@ func (s *Service) GetHistory() []*models.Message {
 // ClearHistory 清空消息历史
 func (s *Service) ClearHistory() {
 	s.history = make([]*models.Message, 0)
+}
+
+// SetHistory 设置消息历史
+func (s *Service) SetHistory(messages []*models.Message) {
+	s.history = messages
 }
 
 // convertMessages 将内部消息格式转换为 Eino 格式

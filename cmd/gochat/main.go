@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"fyne.io/fyne/v2/app"
 	"github.com/wangle201210/gochat/internal/config"
 	"github.com/wangle201210/gochat/internal/service/ai"
+	"github.com/wangle201210/gochat/internal/service/assistant"
+	"github.com/wangle201210/gochat/internal/storage"
 	"github.com/wangle201210/gochat/internal/ui"
 )
 
@@ -35,17 +38,32 @@ func main() {
 		os.Exit(1)
 	}
 
+	// 初始化数据库
+	configDir := filepath.Dir(configPath)
+	dbPath := filepath.Join(configDir, "gochat.db")
+	db, err := storage.NewDatabase(dbPath)
+	if err != nil {
+		log.Fatalf("初始化数据库失败: %v", err)
+	}
+	defer db.Close()
+
 	// 初始化 AI 服务
 	aiService, err := ai.NewService(&cfg.AI)
 	if err != nil {
 		log.Fatalf("初始化 AI 服务失败: %v", err)
 	}
 
+	// 初始化助手服务
+	assistantService, err := assistant.NewService(&cfg.Assistant)
+	if err != nil {
+		log.Fatalf("初始化助手服务失败: %v", err)
+	}
+
 	// 创建 Fyne 应用
 	fyneApp := app.New()
 
-	// 创建聊天窗口，传入 UI 配置
-	chatWindow := ui.NewChatWindow(fyneApp, aiService, &cfg.UI)
+	// 创建聊天窗口，传入 UI 配置、数据库和助手服务
+	chatWindow := ui.NewChatWindow(fyneApp, aiService, assistantService, &cfg.UI, db)
 
 	// 显示窗口并运行应用
 	chatWindow.Show()
